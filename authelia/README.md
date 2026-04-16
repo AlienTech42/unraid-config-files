@@ -2,7 +2,7 @@
 
 This repo contains the config files used in my Authelia setup video.
 
-👉 Full video: (VIDEO LINK COMING SOON)
+👉 Full video: https://youtu.be/LRFwjATqFdw
 
 ---
 
