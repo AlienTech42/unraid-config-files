@@ -1,0 +1,98 @@
+# =========================
+# Authelia Configuration
+# =========================
+
+server:
+  # MUST be 0.0.0.0 in Docker (do not use your Unraid IP here)
+  address: tcp://0.0.0.0:9091
+
+log:
+  level: info
+
+theme:
+  # Options: light, dark, auto
+  name: auto
+
+authentication_backend:
+  file:
+    # This points to your user database file
+    path: /config/users_database.yml
+
+access_control:
+  # Default rule if nothing else matches
+  default_policy: deny  # If nothing matches → block access completely
+
+  # IMPORTANT: Rules are processed top → bottom.
+  # More specific rules must come before wildcard rules.
+  rules:
+    # Don't require Login for Authelia portal
+    - domain: "auth.YOURDOMAIN.com"  # CHANGE THIS (Keep it in " ")
+      policy: bypass
+      
+    # High security apps
+    - domain:
+        - "nginx.YOURDOMAIN.com"        # CHANGE THIS (Keep it in " ")
+        # - "portainer.YOURDOMAIN.com"
+        # - "unraid.YOURDOMAIN.com"     # Uncomment if you expose Unraid
+        # - "nextcloud.YOURDOMAIN.com"  # Uncomment for additional admin apps
+      policy: two_factor
+ 
+    # Public apps (no login required)
+    # Uncomment and add apps you want accessible without login
+    # - domain:
+    #     - "overseerr.YOURDOMAIN.com"
+    #     - "request.YOURDOMAIN.com"
+    #     - "status.YOURDOMAIN.com"
+    #   policy: bypass
+ 
+    # Everything else
+    - domain: "*.YOURDOMAIN.com"     # CHANGE THIS (Keep it in " ")
+      policy: one_factor
+
+session:
+  # Generate with: openssl rand -base64 32
+  secret: "REPLACE_WITH_RANDOM_STRING"  # CHANGE THIS (Keep it in " ")
+  
+  expiration: 3600       # 1 hour
+  inactivity: 300        # 5 minutes idle timeout
+
+  cookies:
+    - name: authelia_session
+
+      # Root domain ONLY (no subdomain)
+      domain: YOURDOMAIN.com                             # CHANGE THIS
+
+      # Your Authelia login portal
+      authelia_url: https://auth.YOURDOMAIN.com          # CHANGE THIS
+
+      # Where users go after login
+      default_redirection_url: https://YOURDOMAIN.com    # CHANGE THIS
+
+storage:
+  # Generate with: openssl rand -base64 32
+  encryption_key: "REPLACE_WITH_RANDOM_STRING"  # CHANGE THIS (Keep it in " ")
+  
+  local:
+    # SQLite database location
+    path: /config/db.sqlite3
+
+notifier:
+  # DEV MODE: writes notifications to a file instead of email
+  filesystem:
+    filename: /config/notification.txt
+
+# SMTP MODE (Optional)
+# If using this section be sure to adjust the settings to match your email provider settings
+# Uncomment below and comment out the filesystem notifier above
+# notifier:
+#   smtp:
+#     address: smtp.gmail.com:587
+#     username: your@email.com
+#     password: app_password
+#     sender: "Authelia <your@email.com>"
+
+identity_validation:
+  reset_password:
+    # REQUIRED in newer Authelia versions
+    # Generate with: openssl rand -base64 32
+    jwt_secret: "REPLACE_WITH_RANDOM_STRING"  # CHANGE THIS (Keep it in " ")

@@ -1,0 +1,46 @@
+Generate Secrets:
+	openssl rand -base64 32
+	
+Password Hash:
+	docker run authelia/authelia:latest authelia crypto hash generate argon2 --password 'YourPassword'
+	
+Edit configuration.yml
+	cd /mnt/user/appdata/authelia
+	nano configuration.yml
+	
+Edit users_database.yml
+	nano users_database.yml
+
+Get your 2FA Code
+	cat /mnt/user/appdata/authelia/notification.txt
+	
+Script for NGINX Advanced/Settings
+
+# Fix large cookie issues (Authelia)
+client_header_buffer_size 16k;
+large_client_header_buffers 4 32k;
+
+# Enable Authelia authentication
+auth_request /authelia;
+
+# Internal Authelia verification endpoint
+location /authelia {
+    internal;
+    proxy_pass http://AUTHELIA-IP:9091/api/verify;
+
+    # REQUIRED for Cloudflare Tunnel setups
+    # Force HTTPS since Cloudflare terminates SSL
+    proxy_set_header X-Original-URL https://$http_host$request_uri;
+    proxy_set_header X-Forwarded-Proto https;
+
+    # Pass real client IP from Cloudflare
+    proxy_set_header X-Real-IP $http_cf_connecting_ip;
+    proxy_set_header X-Forwarded-For $http_cf_connecting_ip;
+
+    # Required for auth_request
+    proxy_set_header Content-Length "";
+    proxy_pass_request_body off;
+}
+
+# Redirect unauthenticated users to Authelia login
+error_page 401 =302 https://auth.YOURDOMAIN.com/?rd=https://$http_host$request_uri;
